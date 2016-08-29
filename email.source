@@ -1,0 +1,103 @@
+--email v1.0 written by ChenglongGeng
+
+-- input/output functions
+CREATE FUNCTION email_in(cstring) RETURNS EmailAddress
+   AS '_OBJWD_/email' LANGUAGE C IMMUTABLE STRICT;
+CREATE FUNCTION email_out(EmailAddress) RETURNS cstring
+   AS '_OBJWD_/email' LANGUAGE C IMMUTABLE STRICT;
+
+-- new type emailaddress
+CREATE TYPE EmailAddress (
+   internallength = 258,
+   input = email_in,
+   output = email_out,
+   alignment = char
+);
+
+-- define operators
+CREATE FUNCTION email_lt(EmailAddress, EmailAddress) RETURNS bool
+   AS '_OBJWD_/email' LANGUAGE C IMMUTABLE STRICT;
+CREATE FUNCTION email_le(EmailAddress, EmailAddress) RETURNS bool
+   AS '_OBJWD_/email' LANGUAGE C IMMUTABLE STRICT;
+CREATE FUNCTION email_eq(EmailAddress, EmailAddress) RETURNS bool
+   AS '_OBJWD_/email' LANGUAGE C IMMUTABLE STRICT;
+CREATE FUNCTION email_ne(EmailAddress, EmailAddress) RETURNS bool
+   AS '_OBJWD_/email' LANGUAGE C IMMUTABLE STRICT;
+CREATE FUNCTION email_gt(EmailAddress, EmailAddress) RETURNS bool
+   AS '_OBJWD_/email' LANGUAGE C IMMUTABLE STRICT;
+CREATE FUNCTION email_ge(EmailAddress, EmailAddress) RETURNS bool
+   AS '_OBJWD_/email' LANGUAGE C IMMUTABLE STRICT;
+CREATE FUNCTION email_sd(EmailAddress, EmailAddress) RETURNS bool
+   AS '_OBJWD_/email' LANGUAGE C IMMUTABLE STRICT;
+CREATE FUNCTION email_nd(EmailAddress, EmailAddress) RETURNS bool
+   AS '_OBJWD_/email' LANGUAGE C IMMUTABLE STRICT;
+
+CREATE OPERATOR < (
+   leftarg = EmailAddress, rightarg = EmailAddress, procedure = email_lt,
+   commutator = > , negator = >= ,
+   restrict = scalarltsel, join = scalarltjoinsel
+);
+
+CREATE OPERATOR <= (
+   leftarg = EmailAddress, rightarg = EmailAddress, procedure = email_le,
+   commutator = >= , negator = > ,
+   restrict = scalarltsel, join = scalarltjoinsel
+);
+
+CREATE OPERATOR = (
+   leftarg = EmailAddress, rightarg = EmailAddress, procedure = email_eq,
+   commutator = = , negator = <> ,
+   restrict = eqsel, join = eqjoinsel
+);
+
+CREATE OPERATOR <> (
+   leftarg = EmailAddress, rightarg = EmailAddress, procedure = email_ne,
+   commutator = <> , negator = = ,
+   restrict = eqsel, join = eqjoinsel
+);
+
+CREATE OPERATOR >= (
+   leftarg = EmailAddress, rightarg = EmailAddress, procedure = email_ge,
+   commutator = <= , negator = < ,
+   restrict = scalargtsel, join = scalargtjoinsel
+);
+
+CREATE OPERATOR > (
+   leftarg = EmailAddress, rightarg = EmailAddress, procedure = email_gt,
+   commutator = < , negator = <= ,
+   restrict = scalargtsel, join = scalargtjoinsel
+);
+
+CREATE OPERATOR ~ (
+   leftarg = EmailAddress, rightarg = EmailAddress, procedure = email_sd,
+   commutator = ~ , negator = !~ ,
+   restrict = eqsel, join = eqjoinsel
+);
+
+CREATE OPERATOR !~ (
+   leftarg = EmailAddress, rightarg = EmailAddress, procedure = email_nd,
+   commutator = !~ , negator = ~ ,
+   restrict = eqsel, join = eqjoinsel
+);
+--support function for indexing
+CREATE FUNCTION email_cmp(EmailAddress, EmailAddress) RETURNS int4
+   AS '_OBJWD_/email' LANGUAGE C IMMUTABLE STRICT;
+CREATE FUNCTION email_hash(EmailAddress) RETURNS int4
+   AS '_OBJWD_/email' LANGUAGE C IMMUTABLE STRICT;
+
+--the btree indexing operator class
+CREATE OPERATOR CLASS email_ops
+    DEFAULT FOR TYPE EmailAddress USING btree AS
+        OPERATOR        1       <  (EmailAddress, EmailAddress),
+        OPERATOR        2       <= (EmailAddress, EmailAddress),
+        OPERATOR        3       =  (EmailAddress, EmailAddress),
+        OPERATOR        4       >= (EmailAddress, EmailAddress),
+        OPERATOR        5       >  (EmailAddress, EmailAddress),
+        FUNCTION        1       email_cmp (EmailAddress, EmailAddress);
+
+
+--the hash indexing operator class
+CREATE OPERATOR CLASS email_ops
+    DEFAULT FOR TYPE EmailAddress USING hash AS
+        OPERATOR        1       = (EmailAddress, EmailAddress),
+        FUNCTION        1       email_hash(EmailAddress);
